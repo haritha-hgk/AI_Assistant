@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>LangGraph Agent</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    max-width:900px;
+    margin:auto;
+    padding:20px;
+}
+
+#chat{
+    border:1px solid #ccc;
+    height:500px;
+    overflow-y:auto;
+    padding:10px;
+}
+
+.user{
+    color:blue;
+    margin-top:10px;
+}
+
+.assistant{
+    color:green;
+    margin-top:10px;
+    white-space:pre-wrap;
+}
+
+input{
+    width:80%;
+    padding:10px;
+}
+
+button{
+    padding:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>RAG + Agent + Memory</h2>
+
+<div id="chat"></div>
+
+<br>
+
+<input
+    id="question"
+    type="text"
+    placeholder="Ask something..."
+>
+
+<button onclick="sendMessage()">
+    Send
+</button>
+
+<script>
+
+const SESSION_ID = "haritha";
+
+async function sendMessage(){
+
+    const input =
+        document.getElementById("question");
+
+    const query = input.value;
+
+    if(!query) return;
+
+    const chat =
+        document.getElementById("chat");
+
+    chat.innerHTML +=
+    `<div class="user">
+        <b>You:</b> ${query}
+    </div>`;
+
+    chat.innerHTML +=
+    `<div class="assistant"
+        id="current">
+    </div>`;
+
+    input.value="";
+
+    const response =
+        await fetch(
+        `/chat?query=${encodeURIComponent(query)}&session_id=${SESSION_ID}`
+    );
+
+    const reader =
+        response.body.getReader();
+
+    const decoder =
+        new TextDecoder();
+
+    let result = "";
+
+    while(true){
+
+        const {done,value}
+            = await reader.read();
+
+        if(done) break;
+
+        const chunk =
+            decoder.decode(value);
+
+        result += chunk;
+
+        document
+            .getElementById("current")
+            .textContent = result;
+
+        chat.scrollTop =
+            chat.scrollHeight;
+    }
+
+    document
+        .getElementById("current")
+        .removeAttribute("id");
+}
+
+</script>
+
+</body>
+
+</html>
